@@ -112,6 +112,8 @@ void Sandbox::RenderGame() const
 {
 	m_camera.ViewWorldThrough();
 
+	m_cloth.Render();
+
 	Debug::DrawPoint( m_lightPosition, 1.f, Color( 1.f, 1.f, 1.f, 1.f ), Debug::Drawing::DRAW_ONLY_IF_VISIBLE );
 }
 
@@ -125,6 +127,8 @@ void Sandbox::GameUpdate( float deltaSeconds )
 {
 	if( m_drawOrigin )
 		Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::Drawing::DRAW_ALWAYS );
+
+	m_cloth.Update( deltaSeconds );
 
 	m_totalRunTimeSeconds += deltaSeconds;
 }

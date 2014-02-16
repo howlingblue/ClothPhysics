@@ -8,11 +8,13 @@
 #include "../Engine/Input/Xbox.hpp"
 #include "../Engine/Camera.hpp"
 #include "../Engine/Game.hpp"
+#include "Cloth.hpp"
 
 //-----------------------------------------------------------------------------------------------
 class Sandbox: public Game
 {
 	Camera m_camera;
+	Cloth m_cloth;
 	FloatVector3 m_lightPosition;
 
 	bool m_drawOrigin;
@@ -42,6 +44,7 @@ public:
 inline Sandbox::Sandbox( bool& quitVariable, unsigned int width, unsigned int height, float horizontalFOVDegrees )
 	: Game( quitVariable, width, height, horizontalFOVDegrees )
 	, m_camera( -2.f, 0.f, 0.f )
+	, m_cloth()
 	, m_lightPosition( 1.f, 1.f, 1.f )
 	, m_drawOrigin( false )
 	, m_totalRunTimeSeconds( 0.f )
