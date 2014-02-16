@@ -1,0 +1,20 @@
+#executables and libraries
+*.exe
+*.dll
+
+#visual studio files
+*.ilk
+*.pdb
+*.idb
+*.sln
+*.suo
+*.vcxproj
+*.filters
+*.user
+
+#object and log files
+*.obj
+*.log
+*.tlog
+*.lastbuildstate
+*.manifest
