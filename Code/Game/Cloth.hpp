@@ -22,6 +22,12 @@ public:
 		FloatVector3	previousVelocity;
 		FloatVector3	acceleration;
 		float			mass;
+
+		void UpdatePositionIfUnlocked( const FloatVector3& movementDirection )
+		{
+			if( !positionIsLocked )
+				currentPosition += movementDirection;
+		}
 	};
 
 	struct Constraint
@@ -62,18 +68,20 @@ private:
 	float m_dragCoefficient;
 
 	void GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY );
-
+	void SatisfyConstraint( Constraint& constraint );
 };
 
-// Inline Mutators
-inline void Cloth::setDragCoefficient( float dragCoefficient ) {
-	assert( dragCoefficient >= 0.0f );
-	m_dragCoefficient = dragCoefficient;
-}
+//-----------------------------------------------------------------------------------------------
+inline void Cloth::SatisfyConstraint(  Constraint& constraint )
+{
+	FloatVector3 vectorFromParticle1To2 = constraint.particle2->currentPosition - constraint.particle1->currentPosition;
+	float currentDistanceBetweenParticles = vectorFromParticle1To2.CalculateNorm();
 
+	FloatVector3 correctionVector = vectorFromParticle1To2 * ( 1.f - constraint.relaxedLength / currentDistanceBetweenParticles );
+	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
 
-inline float Cloth::getDragCoefficient() const {
-	return m_dragCoefficient;
+	constraint.particle1->UpdatePositionIfUnlocked( correctionVectorHalf );
+	constraint.particle2->UpdatePositionIfUnlocked( -correctionVectorHalf );
 }
 
 #endif //INCLUDED_CLOTH_HPP

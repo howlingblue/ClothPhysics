@@ -108,13 +108,18 @@ void Cloth::Update( float deltaSeconds )
 		FloatVector3 forceOnParticle;
 
 		//Gravity
-		forceOnParticle.z += -.98f;
+		forceOnParticle.z += -.49f;
 
 		//Drag
-		//forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
+		forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
 
 		particle.acceleration = forceOnParticle * (1.f / particle.mass );
 
 		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
+	}
+
+	for( unsigned int i = 0; i < m_constraints.size(); ++i )
+	{
+		SatisfyConstraint( m_constraints[ i ] );
 	}
 }
