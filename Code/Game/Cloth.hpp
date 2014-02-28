@@ -11,33 +11,39 @@
 class Cloth
 {
 	#pragma region Composed Class Definitions 
-	//Since this cloth is made of one material, all particles can use the same constraint
-	struct Constraint
-	{
-		float relaxedLength;
-		float dragCoefficient;
-		float stiffnessCoefficient;
-	};
 
 	struct Particle
 	{
-		std::vector< Particle* > boundParticles;
-		FloatVector3 position;
+		FloatVector3 currentPosition;
+		FloatVector3 previousPosition;
 		FloatVector3 velocity;
 		float mass;
+	};
+
+	struct Constraint
+	{
+		Particle* particle1;
+		Particle* particle2;
+		float relaxedLength;
+		float stiffnessCoefficient;
 	};
 	#pragma endregion
 
 public:
-	Cloth() { }
+	Cloth( unsigned int numberOfParticles )
+	{
+		GenerateParticleGrid( numberOfParticles );
+	}
 
 	void Render() const;
 	void Update( float deltaSeconds );
 
 private:
-	float m_length;
-	float m_width;
-	unsigned int numberOfParticles;
+	std::vector< Particle* > m_particles;
+	std::vector< Constraint* > m_constraints;
+	float m_dragCoefficient;
+
+	void GenerateParticleGrid( unsigned int numberOfParticles );
 
 };
 
