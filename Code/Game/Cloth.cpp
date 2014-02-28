@@ -2,9 +2,20 @@
 #include "Cloth.hpp"
 #include "IntegrationMethods.hpp"
 
-static const float STIFFNESS_COEFFICIENT = 1.f;
+static const float STIFFNESS_COEFFICIENT = 6.f;
 
-//-----------------------------------------------------------------------------------------------s
+//-----------------------------------------------------------------------------------------------
+void Cloth::ClearParticleAccelerations()
+{
+	for( unsigned int i = 0; i < m_particles.size(); ++i )
+	{
+		m_particles[ i ]->acceleration.x = 0.f;
+		m_particles[ i ]->acceleration.y = 0.f;
+		m_particles[ i ]->acceleration.z = 0.f;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------
 void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY )
 {
 	FloatVector3 TOP_LEFT_CORNER( -5.f, 5.f, 0.f );
@@ -12,45 +23,38 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 	{
 		for( unsigned int j = 0; j < particlesPerY; ++j )
 		{
-			Particle particle;
-			particle.positionIsLocked = false;
-			particle.currentPosition = FloatVector3( TOP_LEFT_CORNER.x + static_cast< float >( 2 * i ),
-													 TOP_LEFT_CORNER.y + static_cast< float >( 2 * j ),
-													 0.f );
-			particle.previousPosition = particle.currentPosition;
-			particle.mass = 0.2f;
-			m_particles.push_back( particle );
+			m_particles.push_back( new Particle( FloatVector3( TOP_LEFT_CORNER.x + static_cast< float >( 2 * i ), TOP_LEFT_CORNER.y + static_cast< float >( 2 * j ), 0.f ), false, 0.2f ) );
 		}
 	}
 
-	m_particles[ 0 ].positionIsLocked = true;
-	m_particles[ particlesPerX - 1 ].positionIsLocked = true;
-	m_particles[ m_particles.size() - particlesPerX ].positionIsLocked = true;
-	m_particles[ m_particles.size() - 1 ].positionIsLocked = true;
+	m_particles[ 0 ]->positionIsLocked = true;
+	m_particles[ particlesPerX - 1 ]->positionIsLocked = true;
+	m_particles[ m_particles.size() - particlesPerX ]->positionIsLocked = true;
+	m_particles[ m_particles.size() - 1 ]->positionIsLocked = true;
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
-		Particle& thisParticle = m_particles[ i ];
+		Particle& thisParticle = *m_particles[ i ];
 
 		if( i % particlesPerX < particlesPerX - 1 )
 		{
-			Particle& particleOneEastOfThis = m_particles[ i + 1 ];
+			Particle& particleOneEastOfThis = *m_particles[ i + 1 ];
 			Constraint structuralConstraint1( thisParticle, particleOneEastOfThis, STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint1 );
 		}
 
 		if( i < m_particles.size() - particlesPerX )
 		{
-			Particle& particleOneSouthOfThis = m_particles[ i + particlesPerX ];
+			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
 			Constraint structuralConstraint2( thisParticle, particleOneSouthOfThis, STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint2 );
 		}
 
 		if( i % particlesPerX < particlesPerX - 1 && i < m_particles.size() - particlesPerX )
 		{
-			Particle& particleOneEastOfThis = m_particles[ i + 1 ];
-			Particle& particleOneSouthOfThis = m_particles[ i + particlesPerX ];
-			Particle& particleSouthEastOfThis = m_particles[ i + particlesPerX + 1 ];
+			Particle& particleOneEastOfThis = *m_particles[ i + 1 ];
+			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
+			Particle& particleSouthEastOfThis = *m_particles[ i + particlesPerX + 1 ];
 			
 			Constraint shearConstraint1( thisParticle, particleSouthEastOfThis, STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( shearConstraint1 );
@@ -61,7 +65,7 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 
  		if( i % particlesPerX < particlesPerX - 2 )
 		{
-			Particle& particleTwoEastOfThis = m_particles[ i + 2 ];
+			Particle& particleTwoEastOfThis = *m_particles[ i + 2 ];
 			Constraint bendingConstraint1( thisParticle, particleTwoEastOfThis, STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( bendingConstraint1 );
 		}
@@ -69,7 +73,7 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 
 		if( i < m_particles.size() - 2 * particlesPerX )
 		{
-			Particle& particleTwoSouthOfThis = m_particles[ i + 2 * particlesPerX ];
+			Particle& particleTwoSouthOfThis = *m_particles[ i + 2 * particlesPerX ];
 
 			Constraint bendingConstraint2( thisParticle, particleTwoSouthOfThis, STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( bendingConstraint2 );
@@ -84,7 +88,7 @@ void Cloth::Render() const
 	static const Color GREY = Color( 0.5f, 0.5f, 0.5f, 1.f );
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
-		const Particle& particle = m_particles[ i ];
+		const Particle& particle = *m_particles[ i ];
 
 		Debug::DrawPoint( particle.currentPosition, 0.5f, GREY, Debug::Drawing::DRAW_ALWAYS );
 	}
@@ -100,9 +104,16 @@ void Cloth::Render() const
 //-----------------------------------------------------------------------------------------------
 void Cloth::Update( float deltaSeconds )
 {
+	ClearParticleAccelerations();
+
+	for( unsigned int i = 0; i < m_constraints.size(); ++i )
+	{
+		ApplyForceToParticlesFromConstraint( m_constraints[ i ] );
+	}
+
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
-		Particle& particle = m_particles[ i ];
+		Particle& particle = *m_particles[ i ];
 
 		if( particle.positionIsLocked )
 			continue;
@@ -110,22 +121,13 @@ void Cloth::Update( float deltaSeconds )
 		FloatVector3 forceOnParticle;
 
 		//Gravity
-		forceOnParticle.z += -4.9f;
+		forceOnParticle.z += -2.4f;
 
 		//Drag
 		forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
 
-		particle.acceleration = forceOnParticle * (1.f / particle.mass );
+		particle.acceleration += forceOnParticle / particle.mass;
 
 		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
-	}
-
-	static const int MAX_CONSTRAINT_ITERATIONS = 10;
-	for( unsigned int n = 0; n < MAX_CONSTRAINT_ITERATIONS; ++n )
-	{
-		for( unsigned int i = 0; i < m_constraints.size(); ++i )
-		{
-			SatisfyConstraint( m_constraints[ i ] );
-		}
 	}
 }

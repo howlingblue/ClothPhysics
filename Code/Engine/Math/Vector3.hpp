@@ -55,6 +55,7 @@ struct Vector3
 	//const Vector3<NumericType> operator-( const Vector3<NumericType>& u, const Vector3<NumericType>& v );
 	//const Vector3<NumericType> operator*( const Vector3<NumericType>& u, const NumericType& alpha );
 	//const Vector3<NumericType> operator*( const NumericType& alpha, const Vector3<NumericType>& u );
+	//const Vector3<NumericType> operator/( const Vector3<NumericType>& u, const NumericType& alpha );
 	//const Vector3<NumericType> ComponentwiseProduct( const Vector3<NumericType>& u, const Vector3<NumericType>& v );
 	//const Vector3<NumericType> CrossProduct( const Vector3<NumericType>& u, const Vector3<NumericType>& v );
 	//const NumericType DotProduct( const Vector3<NumericType>& u, const Vector3<NumericType>& v ) 
@@ -212,6 +213,17 @@ inline const Vector3<NumericType> operator*( const NumericType& alpha, const Vec
 	result.x *= alpha;
 	result.y *= alpha;
 	result.z *= alpha;
+	return result;
+}
+
+//-----------------------------------------------------------------------------------------------
+template < typename NumericType >
+inline const Vector3<NumericType> operator/( const Vector3<NumericType>& u, const NumericType& alpha )
+{
+	Vector3<NumericType> result = u;
+	result.x /= alpha;
+	result.y /= alpha;
+	result.z /= alpha;
 	return result;
 }
 
