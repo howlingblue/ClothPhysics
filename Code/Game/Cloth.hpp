@@ -29,6 +29,15 @@ public:
 		Particle* particle2;
 		float relaxedLength;
 		float stiffnessCoefficient;
+
+		Constraint( Particle& particleA, Particle& particleB, float constraintStiffness )
+		{
+			particle1 = &particleA;
+			particle2 = &particleB;
+			FloatVector3 vectorBetweenConstraintEnds = particle1->currentPosition - particle2->currentPosition;
+			relaxedLength = vectorBetweenConstraintEnds.CalculateNorm();
+			stiffnessCoefficient = constraintStiffness;
+		}
 	};
 	#pragma endregion
 
