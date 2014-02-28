@@ -1,5 +1,6 @@
 #include "../Engine/DebugDrawing.hpp"
 #include "Cloth.hpp"
+#include "IntegrationMethods.hpp"
 
 static const int CLOTH_WIDTH = 10;
 static const float STIFFNESS_COEFFICIENT = 1.f;

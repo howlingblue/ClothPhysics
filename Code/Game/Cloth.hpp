@@ -3,6 +3,7 @@
 #pragma once
 
 //-----------------------------------------------------------------------------------------------
+#include <cassert>
 #include <vector>
 #include "../Engine/Math/FloatVector3.hpp"
 
@@ -10,14 +11,16 @@
 //-----------------------------------------------------------------------------------------------
 class Cloth
 {
+public:
 	#pragma region Composed Class Definitions 
-
 	struct Particle
 	{
-		FloatVector3 currentPosition;
-		FloatVector3 previousPosition;
-		FloatVector3 velocity;
-		float mass;
+		FloatVector3	currentPosition;
+		FloatVector3	previousPosition;
+		FloatVector3	currentVelocity;
+		FloatVector3	previousVelocity;
+		FloatVector3	acceleration;
+		float			mass;
 	};
 
 	struct Constraint
@@ -30,13 +33,17 @@ class Cloth
 	#pragma endregion
 
 public:
-	Cloth( unsigned int numberOfParticles )
+	Cloth( unsigned int numberOfParticles, float dragCoefficient )
 	{
 		GenerateParticleGrid( numberOfParticles );
 	}
 
 	void Render() const;
 	void Update( float deltaSeconds );
+
+	// Inline Mutators
+	void setDragCoefficient( float dragCoefficient ); 
+	float getDragCoefficient() const;
 
 private:
 	std::vector< Particle > m_particles;
@@ -46,5 +53,16 @@ private:
 	void GenerateParticleGrid( unsigned int numberOfParticles );
 
 };
+
+// Inline Mutators
+inline void Cloth::setDragCoefficient( float dragCoefficient ) {
+	assert( dragCoefficient >= 0.0f );
+	m_dragCoefficient = dragCoefficient;
+}
+
+
+inline float Cloth::getDragCoefficient() const {
+	return m_dragCoefficient;
+}
 
 #endif //INCLUDED_CLOTH_HPP
