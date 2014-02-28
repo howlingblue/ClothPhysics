@@ -2,16 +2,15 @@
 #include "Cloth.hpp"
 #include "IntegrationMethods.hpp"
 
-static const int CLOTH_WIDTH = 10;
 static const float STIFFNESS_COEFFICIENT = 1.f;
 
 //-----------------------------------------------------------------------------------------------s
-void Cloth::GenerateParticleGrid( unsigned int numberOfParticles )
+void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY )
 {
-	FloatVector3 TOP_LEFT_CORNER( -10.f, 10.f, 0.f );
-	for( unsigned int i = 0; i < CLOTH_WIDTH; ++i )
+	FloatVector3 TOP_LEFT_CORNER( -5.f, 5.f, 0.f );
+	for( unsigned int i = 0; i < particlesPerX; ++i )
 	{
-		for( unsigned int j = 0; j < CLOTH_WIDTH; ++j )
+		for( unsigned int j = 0; j < particlesPerX; ++j )
 		{
 			Particle particle;
 			particle.currentPosition = FloatVector3( TOP_LEFT_CORNER.x + static_cast< float >( 2 * i ),
@@ -25,23 +24,50 @@ void Cloth::GenerateParticleGrid( unsigned int numberOfParticles )
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
-		//if we are on the right edge, don't connect us with the left edge
-		if( i = CLOTH_WIDTH - 1 )
-			continue;
-
 		Particle& thisParticle = m_particles[ i ];
-		Particle& particleOneEastOfThis = m_particles[ i + 1 ];
-		Particle& particleTwoEastOfThis = m_particles[ i + 2 ];
-		Particle& particleOneSouthOfThis = m_particles[ i + CLOTH_WIDTH ];
-		Particle& particleTwoSouthOfThis = m_particles[ i + 2 * CLOTH_WIDTH ];
-		Particle& particleSouthEastOfThis = m_particles[ i + CLOTH_WIDTH + 1 ];
 
-		Constraint structuralConstraint1;
-		structuralConstraint1.particle1 = &thisParticle;
-		structuralConstraint1.particle2 = &particleOneEastOfThis;
-		FloatVector3 vectorBetweenConstraintEnds = structuralConstraint1.particle1->currentPosition - structuralConstraint1.particle2->currentPosition;
-		structuralConstraint1.relaxedLength = vectorBetweenConstraintEnds.CalculateNorm();
-		structuralConstraint1.stiffnessCoefficient = STIFFNESS_COEFFICIENT;
+		if( i % particlesPerX < particlesPerX - 1 )
+		{
+			Particle& particleOneEastOfThis = m_particles[ i + 1 ];
+			Constraint structuralConstraint1( thisParticle, particleOneEastOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( structuralConstraint1 );
+		}
+
+		if( i < m_particles.size() - particlesPerX )
+		{
+			Particle& particleOneSouthOfThis = m_particles[ i + particlesPerX ];
+			Constraint structuralConstraint2( thisParticle, particleOneSouthOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( structuralConstraint2 );
+		}
+
+		if( i % particlesPerX < particlesPerX - 1 && i < m_particles.size() - particlesPerX )
+		{
+			Particle& particleOneEastOfThis = m_particles[ i + 1 ];
+			Particle& particleOneSouthOfThis = m_particles[ i + particlesPerX ];
+			Particle& particleSouthEastOfThis = m_particles[ i + particlesPerX + 1 ];
+			
+			Constraint shearConstraint1( thisParticle, particleSouthEastOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( shearConstraint1 );
+
+			Constraint shearConstraint2( particleOneEastOfThis, particleOneSouthOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( shearConstraint2 );
+		}
+
+ 		if( i % particlesPerX < particlesPerX - 2 )
+		{
+			Particle& particleTwoEastOfThis = m_particles[ i + 2 ];
+			Constraint bendingConstraint1( thisParticle, particleTwoEastOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( bendingConstraint1 );
+		}
+
+
+		if( i < m_particles.size() - 2 * particlesPerX )
+		{
+			Particle& particleTwoSouthOfThis = m_particles[ i + 2 * particlesPerX ];
+
+			Constraint bendingConstraint2( thisParticle, particleTwoSouthOfThis, STIFFNESS_COEFFICIENT );
+			m_constraints.push_back( bendingConstraint2 );
+		}
 	}
 }
 
@@ -54,14 +80,14 @@ void Cloth::Render() const
 	{
 		const Particle& particle = m_particles[ i ];
 
-		Debug::DrawPoint( particle.currentPosition, 0.5f, GREY, Debug::Drawing::DRAW_SKINNY_IF_OCCLUDED );
+		Debug::DrawPoint( particle.currentPosition, 0.5f, GREY, Debug::Drawing::DRAW_ALWAYS );
 	}
 
 	for( unsigned int i = 0; i < m_constraints.size(); ++i )
 	{
 		const Constraint& constraint = m_constraints[ i ];
 
-		Debug::DrawLine( constraint.particle1->currentPosition, WHITE, constraint.particle2->currentPosition, WHITE, Debug::Drawing::DRAW_SKINNY_IF_OCCLUDED );
+		Debug::DrawLine( constraint.particle1->currentPosition, WHITE, constraint.particle2->currentPosition, WHITE, Debug::Drawing::DRAW_ALWAYS );
 	}
 }
 

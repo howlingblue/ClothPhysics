@@ -42,9 +42,9 @@ public:
 	#pragma endregion
 
 public:
-	Cloth( unsigned int numberOfParticles, float dragCoefficient )
+	Cloth( unsigned int particlesPerX, unsigned int particlesPerY, float dragCoefficient )
 	{
-		GenerateParticleGrid( numberOfParticles );
+		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}
 
 	void Render() const;
@@ -59,7 +59,7 @@ private:
 	std::vector< Constraint > m_constraints;
 	float m_dragCoefficient;
 
-	void GenerateParticleGrid( unsigned int numberOfParticles );
+	void GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY );
 
 };
 
