@@ -1,5 +1,6 @@
 #include "../Engine/DebugDrawing.hpp"
 #include "Cloth.hpp"
+#include "IntegrationMethods.hpp"
 
 //-----------------------------------------------------------------------------------------------s
 void Cloth::GenerateParticleGrid( unsigned int numberOfParticles )
