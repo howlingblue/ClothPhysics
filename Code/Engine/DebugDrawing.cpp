@@ -48,6 +48,14 @@ void Debug::RenderDrawings()
 			renderer->SetLineWidth( 5.f );
 			Debug::g_activeDebugDrawings[ i ].Render( 1.f );
 		}
+
+
+		if( Debug::g_activeDebugDrawings[ i ].GetLifetimeRemaining() <= 0.f )
+		{
+			Debug::g_activeDebugDrawings.erase( Debug::g_activeDebugDrawings.begin() + i );
+			--i;
+			continue;
+		}
 	}
 
 	g_debugDrawingMaterial.Remove( renderer );
@@ -55,18 +63,9 @@ void Debug::RenderDrawings()
 
 void Debug::UpdateDrawings( float deltaSeconds )
 {
-	for( unsigned int i = 0; i < Debug::g_activeDebugDrawings.size(); ++i )
+	for( unsigned int i = 0; i < g_activeDebugDrawings.size(); ++i )
 	{
-		if( Debug::g_activeDebugDrawings[ i ].IsDead() )
-		{
-			Debug::g_activeDebugDrawings.erase( Debug::g_activeDebugDrawings.begin() + i );
-			--i;
-			continue;
-		}
-
-		Debug::g_activeDebugDrawings[ i ].Update( deltaSeconds );
-		if( Debug::g_activeDebugDrawings[ i ].GetLifetimeRemaining() < 0.f )
-			g_activeDebugDrawings[ i ].SetDead();
+		g_activeDebugDrawings[ i ].Update( deltaSeconds );
 	}
 }
 
