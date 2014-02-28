@@ -29,8 +29,8 @@ inline void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth,
 	particleToIntegrate.currentVelocity = midpointVelocity + halfDeltaSeconds * particleToIntegrate.acceleration;
 
 	// Swap Current With Previous
-	std::swap( particleToIntegrate.currentPosition, particleToIntegrate.previousPosition );
-	std::swap( particleToIntegrate.currentVelocity, particleToIntegrate.previousVelocity );
+	particleToIntegrate.previousPosition = particleToIntegrate.currentPosition;
+	particleToIntegrate.previousVelocity = particleToIntegrate.currentVelocity;
 
 }
 

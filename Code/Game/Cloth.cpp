@@ -108,7 +108,7 @@ void Cloth::Update( float deltaSeconds )
 		FloatVector3 forceOnParticle;
 
 		//Gravity
-		forceOnParticle.z += -.49f;
+		forceOnParticle.z += -4.9f;
 
 		//Drag
 		forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
