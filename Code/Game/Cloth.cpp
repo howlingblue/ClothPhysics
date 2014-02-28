@@ -24,6 +24,8 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 	}
 
 	m_particles[ 0 ].positionIsLocked = true;
+	m_particles[ particlesPerX - 1 ].positionIsLocked = true;
+	m_particles[ m_particles.size() - particlesPerX ].positionIsLocked = true;
 	m_particles[ m_particles.size() - 1 ].positionIsLocked = true;
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
@@ -118,8 +120,12 @@ void Cloth::Update( float deltaSeconds )
 		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
 	}
 
-	for( unsigned int i = 0; i < m_constraints.size(); ++i )
+	static const int MAX_CONSTRAINT_ITERATIONS = 10;
+	for( unsigned int n = 0; n < MAX_CONSTRAINT_ITERATIONS; ++n )
 	{
-		SatisfyConstraint( m_constraints[ i ] );
+		for( unsigned int i = 0; i < m_constraints.size(); ++i )
+		{
+			SatisfyConstraint( m_constraints[ i ] );
+		}
 	}
 }
