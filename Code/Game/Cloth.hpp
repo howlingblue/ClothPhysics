@@ -91,7 +91,7 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 
 	FloatVector3 correctionVector = vectorFromParticle1To2 * ( 1.f - constraint.relaxedLength / currentDistanceBetweenParticles );
 	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
-	FloatVector3 springForceVector = -STIFFNESS_COEFFICIENT * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
+	FloatVector3 springForceVector = -constraint.stiffnessCoefficient * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
 
 	if( !particle1->positionIsLocked )
 		particle1->acceleration -= springForceVector / particle1->mass;

@@ -2,7 +2,9 @@
 #include "Cloth.hpp"
 #include "IntegrationMethods.hpp"
 
-static const float STIFFNESS_COEFFICIENT = 6.f;
+static const float STRUCTURAL_STIFFNESS_COEFFICIENT = 12.f;
+static const float SHEAR_STIFFNESS_COEFFICIENT = 6.f;
+static const float BENDING_STIFFNESS_COEFFICIENT = 7.f;
 
 //-----------------------------------------------------------------------------------------------
 void Cloth::ClearParticleAccelerations()
@@ -39,14 +41,14 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 		if( i % particlesPerX < particlesPerX - 1 )
 		{
 			Particle& particleOneEastOfThis = *m_particles[ i + 1 ];
-			Constraint structuralConstraint1( thisParticle, particleOneEastOfThis, STIFFNESS_COEFFICIENT );
+			Constraint structuralConstraint1( thisParticle, particleOneEastOfThis, STRUCTURAL_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint1 );
 		}
 
 		if( i < m_particles.size() - particlesPerX )
 		{
 			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
-			Constraint structuralConstraint2( thisParticle, particleOneSouthOfThis, STIFFNESS_COEFFICIENT );
+			Constraint structuralConstraint2( thisParticle, particleOneSouthOfThis, STRUCTURAL_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint2 );
 		}
 
@@ -56,17 +58,17 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
 			Particle& particleSouthEastOfThis = *m_particles[ i + particlesPerX + 1 ];
 			
-			Constraint shearConstraint1( thisParticle, particleSouthEastOfThis, STIFFNESS_COEFFICIENT );
+			Constraint shearConstraint1( thisParticle, particleSouthEastOfThis, SHEAR_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( shearConstraint1 );
 
-			Constraint shearConstraint2( particleOneEastOfThis, particleOneSouthOfThis, STIFFNESS_COEFFICIENT );
+			Constraint shearConstraint2( particleOneEastOfThis, particleOneSouthOfThis, SHEAR_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( shearConstraint2 );
 		}
 
  		if( i % particlesPerX < particlesPerX - 2 )
 		{
 			Particle& particleTwoEastOfThis = *m_particles[ i + 2 ];
-			Constraint bendingConstraint1( thisParticle, particleTwoEastOfThis, STIFFNESS_COEFFICIENT );
+			Constraint bendingConstraint1( thisParticle, particleTwoEastOfThis, BENDING_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( bendingConstraint1 );
 		}
 
@@ -75,7 +77,7 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 		{
 			Particle& particleTwoSouthOfThis = *m_particles[ i + 2 * particlesPerX ];
 
-			Constraint bendingConstraint2( thisParticle, particleTwoSouthOfThis, STIFFNESS_COEFFICIENT );
+			Constraint bendingConstraint2( thisParticle, particleTwoSouthOfThis, BENDING_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( bendingConstraint2 );
 		}
 	}
@@ -84,20 +86,30 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 //-----------------------------------------------------------------------------------------------
 void Cloth::Render() const
 {
+	static const Color YELLOW = Color( 1.f, 1.f, 0.f, 1.f );
+	static const Color BLUE = Color( 0.f, 0.f, 1.f, 1.f );
+	static const Color GREEN = Color( 0.f, 1.f, 0.f, 1.f );
 	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
-	static const Color GREY = Color( 0.5f, 0.5f, 0.5f, 1.f );
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
 		const Particle& particle = *m_particles[ i ];
 
-		Debug::DrawPoint( particle.currentPosition, 0.5f, GREY, Debug::Drawing::DRAW_ALWAYS );
+		Debug::DrawPoint( particle.currentPosition, 0.5f, WHITE, Debug::Drawing::DRAW_ALWAYS );
 	}
 
+	Color constraintColor = WHITE;
 	for( unsigned int i = 0; i < m_constraints.size(); ++i )
 	{
 		const Constraint& constraint = m_constraints[ i ];
 
-		Debug::DrawLine( constraint.particle1->currentPosition, WHITE, constraint.particle2->currentPosition, WHITE, Debug::Drawing::DRAW_ALWAYS );
+		if( constraint.stiffnessCoefficient == STRUCTURAL_STIFFNESS_COEFFICIENT )
+			constraintColor = GREEN;
+		if( constraint.stiffnessCoefficient == SHEAR_STIFFNESS_COEFFICIENT )
+			constraintColor = YELLOW;
+		if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
+			constraintColor = BLUE;
+
+		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::Drawing::DRAW_ALWAYS );
 	}
 }
 
