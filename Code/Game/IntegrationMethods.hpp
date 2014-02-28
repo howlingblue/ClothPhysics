@@ -10,7 +10,6 @@
 // Inline Integrator Function Dec
 void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth, 
 	Cloth::Particle & particleToIntegrate, 
-	float stiffnessCoefficient, 
 	float deltaSeconds );
 
 
@@ -18,7 +17,6 @@ void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth,
 // ---------------------- IMPLEMENTATIONS -------------------- //
 inline void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth, 
 	Cloth::Particle & particleToIntegrate,
-	float stiffnessCoefficient,
 	float deltaSeconds )
 {
 	FloatVector3 midpointVelocity;
@@ -26,17 +24,17 @@ inline void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth,
 	// Calculate Midpoint Velocity
 	midpointVelocity.x = particleToIntegrate.currentVelocity.x + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.previousPosition.x ) - ( dampeningCoefficient * particleToIntegrate.previousVelocity.x ) ) /
+		( ( ( -dampeningCoefficient * particleToIntegrate.previousVelocity.x ) ) /
 		particleToIntegrate.mass );
 
 	midpointVelocity.x = particleToIntegrate.currentVelocity.y + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.previousPosition.y ) - ( dampeningCoefficient * particleToIntegrate.previousVelocity.y ) ) /
+		( ( ( -dampeningCoefficient * particleToIntegrate.previousVelocity.y ) ) /
 		particleToIntegrate.mass );
 
 	midpointVelocity.z = particleToIntegrate.currentVelocity.z + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.previousPosition.z ) - ( dampeningCoefficient * particleToIntegrate.previousVelocity.z ) ) /
+		( ( ( -dampeningCoefficient * particleToIntegrate.previousVelocity.z ) ) /
 		particleToIntegrate.mass );
 
 	// Update Position Based On Midpoint Velocity
@@ -47,17 +45,17 @@ inline void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth,
 	// Update Current Velocity
 	particleToIntegrate.currentVelocity.x = midpointVelocity.x + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.currentPosition.x  ) - ( dampeningCoefficient * midpointVelocity.x ) ) / 
+		( ( ( -dampeningCoefficient * midpointVelocity.x ) ) / 
 		particleToIntegrate.mass );
 
 	particleToIntegrate.currentVelocity.y = midpointVelocity.y + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.currentPosition.y  ) - ( dampeningCoefficient * midpointVelocity.y ) ) / 
+		( ( ( -dampeningCoefficient * midpointVelocity.y ) ) / 
 		particleToIntegrate.mass );
 
 	particleToIntegrate.currentVelocity.z = midpointVelocity.z + 
 		( deltaSeconds * 0.50f ) * 
-		( ( ( -stiffnessCoefficient * particleToIntegrate.currentPosition.z  ) - ( dampeningCoefficient * midpointVelocity.z ) ) / 
+		( ( ( -dampeningCoefficient * midpointVelocity.z ) ) / 
 		particleToIntegrate.mass );
 
 	// Swap Current With Previous

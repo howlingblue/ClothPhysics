@@ -15,6 +15,7 @@ public:
 	#pragma region Composed Class Definitions 
 	struct Particle
 	{
+		bool			positionIsLocked;
 		FloatVector3	currentPosition;
 		FloatVector3	previousPosition;
 		FloatVector3	currentVelocity;
@@ -43,6 +44,7 @@ public:
 
 public:
 	Cloth( unsigned int particlesPerX, unsigned int particlesPerY, float dragCoefficient )
+		: m_dragCoefficient( dragCoefficient )
 	{
 		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}

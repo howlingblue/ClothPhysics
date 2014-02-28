@@ -10,9 +10,10 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 	FloatVector3 TOP_LEFT_CORNER( -5.f, 5.f, 0.f );
 	for( unsigned int i = 0; i < particlesPerX; ++i )
 	{
-		for( unsigned int j = 0; j < particlesPerX; ++j )
+		for( unsigned int j = 0; j < particlesPerY; ++j )
 		{
 			Particle particle;
+			particle.positionIsLocked = false;
 			particle.currentPosition = FloatVector3( TOP_LEFT_CORNER.x + static_cast< float >( 2 * i ),
 													 TOP_LEFT_CORNER.y + static_cast< float >( 2 * j ),
 													 0.f );
@@ -21,6 +22,9 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 			m_particles.push_back( particle );
 		}
 	}
+
+	m_particles[ 0 ].positionIsLocked = true;
+	m_particles[ m_particles.size() - 1 ].positionIsLocked = true;
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
@@ -92,7 +96,17 @@ void Cloth::Render() const
 }
 
 //-----------------------------------------------------------------------------------------------
-void Cloth::Update( float )
+void Cloth::Update( float deltaSeconds )
 {
+	for( unsigned int i = 0; i < m_particles.size(); ++i )
+	{
+		Particle& particle = m_particles[ i ];
 
+		if( particle.positionIsLocked )
+			continue;
+
+		particle.acceleration.z = -.98f;
+
+		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
+	}
 }
