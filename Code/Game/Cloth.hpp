@@ -39,8 +39,8 @@ public:
 	void Update( float deltaSeconds );
 
 private:
-	std::vector< Particle* > m_particles;
-	std::vector< Constraint* > m_constraints;
+	std::vector< Particle > m_particles;
+	std::vector< Constraint > m_constraints;
 	float m_dragCoefficient;
 
 	void GenerateParticleGrid( unsigned int numberOfParticles );
