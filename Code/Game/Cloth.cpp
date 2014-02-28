@@ -105,7 +105,15 @@ void Cloth::Update( float deltaSeconds )
 		if( particle.positionIsLocked )
 			continue;
 
-		particle.acceleration.z = -.98f;
+		FloatVector3 forceOnParticle;
+
+		//Gravity
+		forceOnParticle.z += -.98f;
+
+		//Drag
+		//forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
+
+		particle.acceleration = forceOnParticle * (1.f / particle.mass );
 
 		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
 	}
