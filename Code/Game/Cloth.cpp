@@ -140,8 +140,6 @@ void Cloth::GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullV
 		
 	}
 
-
-
 	out_nullIndexArray = new unsigned short[ out_numberOfIndices ];
 }
 
@@ -183,10 +181,14 @@ void Cloth::Update( float deltaSeconds )
 
 	GenerateClothNormals();
 
+
 	for( unsigned int i = 0; i < m_constraints.size(); ++i )
 	{
 		ApplyForceToParticlesFromConstraint( m_constraints[ i ] );
 	}
+
+	FloatVector3 windForce( 0.3f, 0.1f, 0.1f );
+	AddWindForce( windForce );
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
@@ -208,3 +210,34 @@ void Cloth::Update( float deltaSeconds )
 		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
 	}
 }
+
+
+void Cloth::AddWindForce( const FloatVector3& directionOfWindForce ) {
+	// PR :: Ensure we don't overstep with (-1)
+	for ( size_t x = 0; x < ( m_particlesPerX - 1 ); ++x ) {
+		for ( size_t y = 0; y < ( m_particlesPerY - 1 ); ++y ) {
+			Particle & p1 = GetParticleAtPosition( x+1, y );
+			Particle & p2 = GetParticleAtPosition( x, y );
+			Particle & p3 = GetParticleAtPosition( x, y+1 );
+			AddWindForcesForTriangle( p1, p2, p3, directionOfWindForce );
+			Particle & pOne = GetParticleAtPosition( x+1, y+1 );
+			Particle & pTwo = GetParticleAtPosition( x+1, y );
+			Particle & pThree = GetParticleAtPosition( x, y+1 );
+			AddWindForcesForTriangle( p1, p2, p3, directionOfWindForce );
+		} // end inner for
+	} // end outer for
+}
+
+
+void Cloth::AddWindForcesForTriangle( Particle& p1, Particle& p2, Particle& p3, const FloatVector3& direction ) {
+
+	FloatVector3 normalOfTriangle = calculateTriangleNormal( p1, p2, p3 );
+	FloatVector3 d = normalOfTriangle;
+	d.Normalize();
+	FloatVector3 force = normalOfTriangle * ( DotProduct( d, direction ) );
+	p1.addExternalForceToParticle( force );
+	p2.addExternalForceToParticle( force );
+	p3.addExternalForceToParticle( force );
+
+}
+

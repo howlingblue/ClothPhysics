@@ -22,19 +22,27 @@ public:
 		FloatVector3	acceleration;
 		FloatVector3	normal;
 		float			mass;
+		float			inverseMass;
 
 		Particle( FloatVector3 startingPosition, bool lockPosition, float particleMass )
 			: currentPosition( startingPosition )
 			, previousPosition( startingPosition )
 			, positionIsLocked( lockPosition )
 			, mass( particleMass )
+			, inverseMass( 1.0f/particleMass ) // PR: Potentially dangerous to do this here if mass is invalidly entered (EX: 0.0f )
 		{ }
 
-		void UpdatePositionIfUnlocked( const FloatVector3& movementDirection )
+		inline void UpdatePositionIfUnlocked( const FloatVector3& movementDirection )
 		{
-			if( !positionIsLocked )
+			if( !positionIsLocked ) {
 				currentPosition += movementDirection;
+			}
 		}
+
+		inline void addExternalForceToParticle( const FloatVector3& forceVector ) {
+			acceleration += ( inverseMass * forceVector ); 
+		}
+
 	};
 
 	struct Constraint
@@ -77,6 +85,7 @@ private:
 	float m_dragCoefficient;
 	unsigned int m_particlesPerX, m_particlesPerY;
 
+	Particle &   GetParticleAtPosition( size_t rowNum, size_t colNum );
 	unsigned int GetIndexOfParticleEastOf( unsigned int particleIndex ) { return particleIndex + 1; }
 	unsigned int GetIndexOfParticleSouthOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX; }
 	unsigned int GetIndexOfParticleSoutheastOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX + 1; }
@@ -94,6 +103,11 @@ private:
 	void GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullVertexArray, unsigned int& out_numberOfVertices,
 									  unsigned short* out_nullIndexArray, unsigned int& out_numberOfIndices );
 	void SatisfyConstraint( Constraint& constraint );
+
+	void AddWindForce( const FloatVector3& directionOfWindForce );
+	void AddWindForcesForTriangle( Particle& p1, Particle& p2, Particle& p3, const FloatVector3& direction );
+
+
 };
 
 //-----------------------------------------------------------------------------------------------
@@ -103,18 +117,22 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 	Particle* particle2 = constraint.particle2;
 
 	FloatVector3 vectorFromParticle1To2 = particle2->currentPosition - particle1->currentPosition;
+	// PR: CalculateNorm is Length of vector?
 	float currentDistanceBetweenParticles = vectorFromParticle1To2.CalculateNorm();
 
 	FloatVector3 correctionVector = vectorFromParticle1To2 * ( 1.f - constraint.relaxedLength / currentDistanceBetweenParticles );
 	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
 	FloatVector3 springForceVector = -constraint.stiffnessCoefficient * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
 
-	if( !particle1->positionIsLocked )
+	if( !particle1->positionIsLocked ) {
 		particle1->acceleration -= springForceVector / particle1->mass;
+	}
 
-	if( !particle2->positionIsLocked )
+	if( !particle2->positionIsLocked ) {
 		particle2->acceleration += springForceVector / particle2->mass;
+	}
 }
+
 
 //-----------------------------------------------------------------------------------------------
 inline void Cloth::CalculateAndAddNormalsToParticles( Particle* particle1, Particle* particle2, Particle* particle3 )
@@ -148,5 +166,14 @@ inline void Cloth::SatisfyConstraint(  Constraint& constraint )
 	else
 		constraint.particle2->UpdatePositionIfUnlocked( -correctionVectorHalf );
 }
+
+
+// PR : For Row major convenience
+inline Cloth::Particle& Cloth::GetParticleAtPosition( size_t colNum, size_t rowNum ) {
+	size_t offset = ( rowNum * m_particlesPerX ) + colNum; 
+	Particle & particle = *(m_particles[offset]);
+	return particle;
+}
+
 
 #endif //INCLUDED_CLOTH_HPP
