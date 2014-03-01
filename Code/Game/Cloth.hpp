@@ -19,8 +19,8 @@ public:
 		FloatVector3	currentPosition;
 		FloatVector3	previousPosition;
 		FloatVector3	currentVelocity;
-		FloatVector3	previousVelocity;
 		FloatVector3	acceleration;
+		FloatVector3	normal;
 		float			mass;
 
 		Particle( FloatVector3 startingPosition, bool lockPosition, float particleMass )
@@ -58,6 +58,8 @@ public:
 public:
 	Cloth( unsigned int particlesPerX, unsigned int particlesPerY, float dragCoefficient )
 		: m_dragCoefficient( dragCoefficient )
+		, m_particlesPerX( particlesPerX )
+		, m_particlesPerY( particlesPerY )
 	{
 		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}
@@ -73,10 +75,21 @@ private:
 	std::vector< Particle* > m_particles;
 	std::vector< Constraint > m_constraints;
 	float m_dragCoefficient;
+	unsigned int m_particlesPerX, m_particlesPerY;
+
+	unsigned int GetIndexOfParticleEastOf( unsigned int particleIndex ) { return particleIndex + 1; }
+	unsigned int GetIndexOfParticleSouthOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX; }
+	unsigned int GetIndexOfParticleSoutheastOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX + 1; }
+
+	void ClearParticleAccelerations();
+	void ClearParticleNormals();
 
 	void ApplyForceToParticlesFromConstraint( Constraint& constraint );
-	void ClearParticleAccelerations();
+	void CalculateAndAddNormalsToParticles( Particle* particle1, Particle* particle2, Particle* particle3 );
+	void GenerateClothNormals();
 	void GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY );
+	void GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullVertexArray, unsigned int& out_numberOfVertices,
+									  unsigned short* out_nullIndexArray, unsigned int& out_numberOfIndices );
 	void SatisfyConstraint( Constraint& constraint );
 };
 
@@ -98,6 +111,19 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 
 	if( !particle2->positionIsLocked )
 		particle2->acceleration += springForceVector / particle2->mass;
+}
+
+//-----------------------------------------------------------------------------------------------
+inline void Cloth::CalculateAndAddNormalsToParticles( Particle* particle1, Particle* particle2, Particle* particle3 )
+{
+	FloatVector3 vectorFromParticle1To2 = particle2->currentPosition - particle1->currentPosition;
+	FloatVector3 vectorFromParticle1To3 = particle3->currentPosition - particle1->currentPosition;
+
+	FloatVector3 normalForTriangle = CrossProduct( vectorFromParticle1To2, vectorFromParticle1To3 );
+
+	particle1->normal += normalForTriangle;
+	particle2->normal += normalForTriangle;
+	particle3->normal += normalForTriangle;
 }
 
 //-----------------------------------------------------------------------------------------------

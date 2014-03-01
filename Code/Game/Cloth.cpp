@@ -1,8 +1,10 @@
 #include "../Engine/DebugDrawing.hpp"
+#include "../Engine/Graphics/Renderer.hpp"
+#include "../Engine/Graphics/VertexDataContainers.hpp"
 #include "Cloth.hpp"
 #include "IntegrationMethods.hpp"
 
-static const float STRUCTURAL_STIFFNESS_COEFFICIENT = 12.f;
+static const float STRUCTURAL_STIFFNESS_COEFFICIENT = 8.f;
 static const float SHEAR_STIFFNESS_COEFFICIENT = 6.f;
 static const float BENDING_STIFFNESS_COEFFICIENT = 7.f;
 
@@ -14,6 +16,28 @@ void Cloth::ClearParticleAccelerations()
 		m_particles[ i ]->acceleration.x = 0.f;
 		m_particles[ i ]->acceleration.y = 0.f;
 		m_particles[ i ]->acceleration.z = 0.f;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------
+void Cloth::ClearParticleNormals()
+{
+	for( unsigned int i = 0; i < m_particles.size(); ++i )
+	{
+		m_particles[ i ]->acceleration.x = 0.f;
+		m_particles[ i ]->acceleration.y = 0.f;
+		m_particles[ i ]->acceleration.z = 0.f;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------
+void Cloth::GenerateClothNormals()
+{
+	ClearParticleNormals();
+
+	for( unsigned int i = 0; i < m_particles.size() - m_particlesPerX; ++i )
+	{
+		int numberOfNeighboringTriangles = 0;
 	}
 }
 
@@ -84,12 +108,51 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 }
 
 //-----------------------------------------------------------------------------------------------
+void Cloth::GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullVertexArray, unsigned int& out_numberOfVertices,
+										 unsigned short* out_nullIndexArray, unsigned int& out_numberOfIndices )
+{
+	static const unsigned int VERTICES_PER_CLOTH_SQUARE = 6;
+	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
+
+	out_numberOfVertices = VERTICES_PER_CLOTH_SQUARE * ( m_particles.size() - m_particlesPerX - m_particlesPerY + 1 );
+	out_numberOfIndices = out_numberOfVertices + m_particlesPerY;
+
+	out_nullVertexArray = new VertexColorNormalTextureData[ out_numberOfVertices ];
+
+	//Bind every particle except the last line
+	for( unsigned int i = 0; i < m_particles.size() - m_particlesPerX; ++i )
+	{
+		if( i % m_particlesPerX < m_particlesPerX - 1 )
+		{
+			Particle& thisParticle = *m_particles[ i ];
+			Particle& particleOneEastOfThis = *m_particles[ GetIndexOfParticleEastOf( i ) ];
+			Particle& particleOneSouthOfThis = *m_particles[ GetIndexOfParticleSouthOf( i ) ];
+			Particle& particleSouthEastOfThis = *m_particles[ GetIndexOfParticleSoutheastOf( i ) ];
+
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 0 ] = VertexColorNormalTextureData( particleOneSouthOfThis.currentPosition, WHITE, particleOneSouthOfThis.normal, FloatVector2( 0.f, 0.f ) );
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 1 ] = VertexColorNormalTextureData( particleSouthEastOfThis.currentPosition, WHITE, particleSouthEastOfThis.normal, FloatVector2( 0.f, 0.f ) );
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 2 ] = VertexColorNormalTextureData( thisParticle.currentPosition, WHITE, thisParticle.normal, FloatVector2( 0.f, 0.f ) );
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 3 ] = VertexColorNormalTextureData( particleOneEastOfThis.currentPosition, WHITE, particleOneEastOfThis.normal, FloatVector2( 0.f, 0.f ) );
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 4 ] = out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 3 ];
+			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 5 ] = out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 2 ];
+
+		}
+		
+	}
+
+
+
+	out_nullIndexArray = new unsigned short[ out_numberOfIndices ];
+}
+
+//-----------------------------------------------------------------------------------------------
 void Cloth::Render() const
 {
 	static const Color YELLOW = Color( 1.f, 1.f, 0.f, 1.f );
 	static const Color BLUE = Color( 0.f, 0.f, 1.f, 1.f );
 	static const Color GREEN = Color( 0.f, 1.f, 0.f, 1.f );
 	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
+
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{
 		const Particle& particle = *m_particles[ i ];
@@ -118,6 +181,8 @@ void Cloth::Update( float deltaSeconds )
 {
 	ClearParticleAccelerations();
 
+	GenerateClothNormals();
+
 	for( unsigned int i = 0; i < m_constraints.size(); ++i )
 	{
 		ApplyForceToParticlesFromConstraint( m_constraints[ i ] );
@@ -136,7 +201,7 @@ void Cloth::Update( float deltaSeconds )
 		forceOnParticle.z += -2.4f;
 
 		//Drag
-		forceOnParticle += ( -m_dragCoefficient * particle.previousVelocity );
+		forceOnParticle += ( -m_dragCoefficient * particle.currentVelocity );
 
 		particle.acceleration += forceOnParticle / particle.mass;
 
