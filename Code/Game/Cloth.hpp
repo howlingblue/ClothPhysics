@@ -81,6 +81,9 @@ private:
 	unsigned int GetIndexOfParticleSouthOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX; }
 	unsigned int GetIndexOfParticleSoutheastOf( unsigned int particleIndex ) { return particleIndex + m_particlesPerX + 1; }
 
+	bool indexIsNotOnRightEdge( unsigned int particleIndex ) { return particleIndex % m_particlesPerX < m_particlesPerX - 1; }
+	bool indexIsNotOnBottomEdge( unsigned int particleIndex ) { return particleIndex < m_particles.size() - m_particlesPerX; }
+
 	void ClearParticleAccelerations();
 	void ClearParticleNormals();
 

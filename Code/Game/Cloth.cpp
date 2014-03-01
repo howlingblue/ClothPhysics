@@ -62,21 +62,21 @@ void Cloth::GenerateParticleGrid( unsigned int particlesPerX, unsigned int parti
 	{
 		Particle& thisParticle = *m_particles[ i ];
 
-		if( i % particlesPerX < particlesPerX - 1 )
+		if( indexIsNotOnRightEdge( i ) )
 		{
 			Particle& particleOneEastOfThis = *m_particles[ i + 1 ];
 			Constraint structuralConstraint1( thisParticle, particleOneEastOfThis, STRUCTURAL_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint1 );
 		}
 
-		if( i < m_particles.size() - particlesPerX )
+		if( indexIsNotOnBottomEdge( i ) )
 		{
 			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
 			Constraint structuralConstraint2( thisParticle, particleOneSouthOfThis, STRUCTURAL_STIFFNESS_COEFFICIENT );
 			m_constraints.push_back( structuralConstraint2 );
 		}
 
-		if( i % particlesPerX < particlesPerX - 1 && i < m_particles.size() - particlesPerX )
+		if( indexIsNotOnRightEdge( i ) && indexIsNotOnBottomEdge( i ) )
 		{
 			Particle& particleOneEastOfThis = *m_particles[ i + 1 ];
 			Particle& particleOneSouthOfThis = *m_particles[ i + particlesPerX ];
