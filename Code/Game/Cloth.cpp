@@ -187,8 +187,7 @@ void Cloth::Update( float deltaSeconds )
 		ApplyForceToParticlesFromConstraint( m_constraints[ i ] );
 	}
 
-	FloatVector3 windForce( 0.3f, 0.1f, 0.1f );
-	AddWindForce( windForce );
+	AddWindForce( m_windForce );
 
 	for( unsigned int i = 0; i < m_particles.size(); ++i )
 	{

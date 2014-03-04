@@ -78,12 +78,14 @@ public:
 	// Inline Mutators
 	void setDragCoefficient( float dragCoefficient ); 
 	float getDragCoefficient() const;
+	void SetWindForce( const FloatVector3& windForce ) { m_windForce = windForce; }
 
 private:
 	std::vector< Particle* > m_particles;
 	std::vector< Constraint > m_constraints;
 	float m_dragCoefficient;
 	unsigned int m_particlesPerX, m_particlesPerY;
+	FloatVector3 m_windForce;
 
 	Particle &   GetParticleAtPosition( size_t rowNum, size_t colNum );
 	unsigned int GetIndexOfParticleEastOf( unsigned int particleIndex ) { return particleIndex + 1; }

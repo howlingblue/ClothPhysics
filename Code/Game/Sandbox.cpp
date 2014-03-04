@@ -139,6 +139,13 @@ void Sandbox::InputUpdate( float deltaSeconds, Keyboard& keyboard, const Mouse& 
 	if( keyboard.KeyIsPressed( Keyboard::ESCAPE ) )
 		m_quitVariable = true;
 
+	if( keyboard.KeyIsPressed( Keyboard::NUMBER_1 ) )
+		m_cloth.SetWindForce( FloatVector3( 0.f, 0.f, 0.f ) );
+	if( keyboard.KeyIsPressed( Keyboard::NUMBER_2 ) )
+		m_cloth.SetWindForce( FloatVector3( 0.3f, 0.1f, 0.1f ) );
+	if( keyboard.KeyIsPressed( Keyboard::NUMBER_3 ) )
+		m_cloth.SetWindForce( FloatVector3( 0.f, 0.f, 0.1f ) );
+
 	UpdatePlayerFromInput( deltaSeconds, keyboard, mouse );
 }
 
