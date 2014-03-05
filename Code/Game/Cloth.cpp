@@ -114,13 +114,13 @@ void Cloth::GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullV
 	static const unsigned int VERTICES_PER_CLOTH_SQUARE = 6;
 	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
 
-	out_numberOfVertices = VERTICES_PER_CLOTH_SQUARE * ( m_particles.size() - m_particlesPerX - m_particlesPerY + 1 );
+	out_numberOfVertices = VERTICES_PER_CLOTH_SQUARE * 10;
 	out_numberOfIndices = out_numberOfVertices + m_particlesPerY;
 
 	out_nullVertexArray = new VertexColorNormalTextureData[ out_numberOfVertices ];
 
 	//Bind every particle except the last line
-	for( unsigned int i = 0; i < m_particles.size() - m_particlesPerX; ++i )
+	for( unsigned int i = 0; i < 10 * VERTICES_PER_CLOTH_SQUARE; ++i )
 	{
 		if( i % m_particlesPerX < m_particlesPerX - 1 )
 		{
@@ -137,41 +137,16 @@ void Cloth::GenerateVertexAndIndexArray( VertexColorNormalTextureData* out_nullV
 			out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 5 ] = out_nullVertexArray[ VERTICES_PER_CLOTH_SQUARE * i + 2 ];
 
 		}
-		
 	}
 
 	out_nullIndexArray = new unsigned short[ out_numberOfIndices ];
 }
 
 //-----------------------------------------------------------------------------------------------
-void Cloth::Render() const
+void Cloth::Render( bool drawInDebug ) const
 {
-	static const Color YELLOW = Color( 1.f, 1.f, 0.f, 1.f );
-	static const Color BLUE = Color( 0.f, 0.f, 1.f, 1.f );
-	static const Color GREEN = Color( 0.f, 1.f, 0.f, 1.f );
-	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
-
-	for( unsigned int i = 0; i < m_particles.size(); ++i )
-	{
-		const Particle& particle = *m_particles[ i ];
-
-		Debug::DrawPoint( particle.currentPosition, 0.5f, WHITE, Debug::Drawing::DRAW_ALWAYS );
-	}
-
-	Color constraintColor = WHITE;
-	for( unsigned int i = 0; i < m_constraints.size(); ++i )
-	{
-		const Constraint& constraint = m_constraints[ i ];
-
-		if( constraint.stiffnessCoefficient == STRUCTURAL_STIFFNESS_COEFFICIENT )
-			constraintColor = GREEN;
-		if( constraint.stiffnessCoefficient == SHEAR_STIFFNESS_COEFFICIENT )
-			constraintColor = YELLOW;
-		if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
-			constraintColor = BLUE;
-
-		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::Drawing::DRAW_ALWAYS );
-	}
+	if( drawInDebug )
+		RenderDebugParticlesAndConstraints();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -182,7 +157,7 @@ void Cloth::Update( float deltaSeconds )
 	GenerateClothNormals();
 
 	// PR: Added loop to control how many times we want to satisfy the constraints
-	for ( int i = 0; i < m_numTimesToSatisfyContraints; ++i ) {
+	for ( unsigned int i = 0; i < m_numTimesToSatisfyContraints; ++i ) {
 		for( unsigned int j = 0; j < m_constraints.size(); ++j )
 		{
 			// PR: We can switch between to compare
@@ -247,5 +222,36 @@ void Cloth::AddWindForcesForTriangle( Particle& p1, Particle& p2, Particle& p3, 
 	p2.addExternalForceToParticle( force );
 	p3.addExternalForceToParticle( force );
 
+}
+
+
+void Cloth::RenderDebugParticlesAndConstraints() const
+{
+	static const Color YELLOW = Color( 1.f, 1.f, 0.f, 1.f );
+	static const Color BLUE = Color( 0.f, 0.f, 1.f, 1.f );
+	static const Color GREEN = Color( 0.f, 1.f, 0.f, 1.f );
+	static const Color WHITE = Color( 1.f, 1.f, 1.f, 1.f );
+
+	for( unsigned int i = 0; i < m_particles.size(); ++i )
+	{
+		const Particle& particle = *m_particles[ i ];
+
+		Debug::DrawPoint( particle.currentPosition, 0.5f, WHITE, Debug::Drawing::DRAW_ALWAYS );
+	}
+
+	Color constraintColor = WHITE;
+	for( unsigned int i = 0; i < m_constraints.size(); ++i )
+	{
+		const Constraint& constraint = m_constraints[ i ];
+
+		if( constraint.stiffnessCoefficient == STRUCTURAL_STIFFNESS_COEFFICIENT )
+			constraintColor = GREEN;
+		if( constraint.stiffnessCoefficient == SHEAR_STIFFNESS_COEFFICIENT )
+			constraintColor = YELLOW;
+		if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
+			constraintColor = BLUE;
+
+		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::Drawing::DRAW_ALWAYS );
+	}
 }
 

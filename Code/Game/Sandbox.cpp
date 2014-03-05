@@ -112,7 +112,7 @@ void Sandbox::RenderGame() const
 {
 	m_camera.ViewWorldThrough();
 
-	m_cloth.Render();
+	m_cloth.Render( m_drawDebugCloth );
 
 	Debug::DrawPoint( m_lightPosition, 1.f, Color( 1.f, 1.f, 1.f, 1.f ), Debug::Drawing::DRAW_ONLY_IF_VISIBLE );
 }
@@ -138,6 +138,9 @@ void Sandbox::InputUpdate( float deltaSeconds, Keyboard& keyboard, const Mouse& 
 {
 	if( keyboard.KeyIsPressed( Keyboard::ESCAPE ) )
 		m_quitVariable = true;
+
+	if( keyboard.KeyIsPressed( Keyboard::C ) )
+		m_drawDebugCloth = !m_drawDebugCloth;
 
 	if( keyboard.KeyIsPressed( Keyboard::NUMBER_1 ) )
 		m_cloth.SetWindForce( FloatVector3( 0.f, 0.f, 0.f ) );

@@ -74,7 +74,7 @@ public:
 		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}
 
-	void Render() const;
+	void Render( bool drawInDebug ) const;
 	void Update( float deltaSeconds );
 
 	// Inline Mutators
@@ -113,7 +113,7 @@ private:
 	void AddWindForce( const FloatVector3& directionOfWindForce );
 	void AddWindForcesForTriangle( Particle& p1, Particle& p2, Particle& p3, const FloatVector3& direction );
 
-
+	void RenderDebugParticlesAndConstraints() const;
 };
 
 //-----------------------------------------------------------------------------------------------
