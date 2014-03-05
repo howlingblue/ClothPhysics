@@ -128,7 +128,7 @@ void Sandbox::GameUpdate( float deltaSeconds )
 	if( m_drawOrigin )
 		Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::Drawing::DRAW_ALWAYS );
 
-	m_cloth.Update( deltaSeconds );
+	m_cloth.Update( deltaSeconds, m_useConstraintSatisfaction );
 
 	m_totalRunTimeSeconds += deltaSeconds;
 }
@@ -141,6 +141,9 @@ void Sandbox::InputUpdate( float deltaSeconds, Keyboard& keyboard, const Mouse& 
 
 	if( keyboard.KeyIsPressed( Keyboard::C ) )
 		m_drawDebugCloth = !m_drawDebugCloth;
+
+	if( keyboard.KeyIsPressed( Keyboard::X ) )
+		m_useConstraintSatisfaction = !m_useConstraintSatisfaction;
 
 	if( keyboard.KeyIsPressed( Keyboard::NUMBER_1 ) )
 		m_cloth.SetWindForce( FloatVector3( 0.f, 0.f, 0.f ) );

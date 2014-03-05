@@ -7,11 +7,11 @@
 #include <vector>
 #include "../Engine/Math/FloatVector3.hpp"
 
-const size_t DEFAULT_CONSTRAINT_LOOPS = 8;
-
 //-----------------------------------------------------------------------------------------------
 class Cloth
 {
+	static const size_t DEFAULT_NUMBER_OF_CONSTRAINT_SATISFACTION_LOOPS = 8;
+
 public:
 	#pragma region Composed Class Definitions 
 	struct Particle
@@ -69,13 +69,13 @@ public:
 		: m_dragCoefficient( dragCoefficient )
 		, m_particlesPerX( particlesPerX )
 		, m_particlesPerY( particlesPerY )
-		, m_numTimesToSatisfyContraints( DEFAULT_CONSTRAINT_LOOPS )
+		, m_numberOfConstraintSatisfactionLoops( DEFAULT_NUMBER_OF_CONSTRAINT_SATISFACTION_LOOPS )
 	{
 		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}
 
 	void Render( bool drawInDebug ) const;
-	void Update( float deltaSeconds );
+	void Update( float deltaSeconds, bool useConstraintSatisfaction );
 
 	// Inline Mutators
 	void setDragCoefficient( float dragCoefficient ); 
@@ -83,13 +83,14 @@ public:
 	void SetWindForce( const FloatVector3& windForce ) { m_windForce = windForce; }
 
 private:
+
 	std::vector< Particle* > m_particles;
 	std::vector< Constraint > m_constraints;
 	float m_dragCoefficient;
 	unsigned int m_particlesPerX, m_particlesPerY;
 	FloatVector3 m_windForce;
 	// PR: Added this to dictate how many times we for loop
-	size_t		 m_numTimesToSatisfyContraints;
+	size_t		 m_numberOfConstraintSatisfactionLoops;
 
 	Particle &   GetParticleAtPosition( size_t rowNum, size_t colNum );
 	unsigned int GetIndexOfParticleEastOf( unsigned int particleIndex ) { return particleIndex + 1; }

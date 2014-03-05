@@ -19,6 +19,7 @@ class Sandbox: public Game
 
 	bool m_drawOrigin;
 	bool m_drawDebugCloth;
+	bool m_useConstraintSatisfaction;
 	float m_totalRunTimeSeconds;
 
 	void ConvertKeyboardToCameraInput( const Keyboard& keyboard, float& out_xyMovementAngleDegrees, float& out_xyMovementMagnitude, float& out_zMovementMagnitude );
@@ -50,6 +51,7 @@ inline Sandbox::Sandbox( bool& quitVariable, unsigned int width, unsigned int he
 	, m_drawOrigin( false )
 	, m_totalRunTimeSeconds( 0.f )
 	, m_drawDebugCloth( true )
+	, m_useConstraintSatisfaction( true )
 { }
 
 #endif //INCLUDED_SANDBOX_HPP

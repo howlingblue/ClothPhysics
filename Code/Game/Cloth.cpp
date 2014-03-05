@@ -150,19 +150,28 @@ void Cloth::Render( bool drawInDebug ) const
 }
 
 //-----------------------------------------------------------------------------------------------
-void Cloth::Update( float deltaSeconds )
+void Cloth::Update( float deltaSeconds, bool useConstraintSatisfaction )
 {
 	ClearParticleAccelerations();
 
 	GenerateClothNormals();
 
-	// PR: Added loop to control how many times we want to satisfy the constraints
-	for ( unsigned int i = 0; i < m_numTimesToSatisfyContraints; ++i ) {
+	if( useConstraintSatisfaction )
+	{
+		// PR: Added loop to control how many times we want to satisfy the constraints
+		for ( unsigned int i = 0; i < m_numberOfConstraintSatisfactionLoops; ++i )
+		{
+			for( unsigned int j = 0; j < m_constraints.size(); ++j )
+			{
+				SatisfyConstraint( m_constraints[ j ] );
+			}
+		}
+	}
+	else
+	{
 		for( unsigned int j = 0; j < m_constraints.size(); ++j )
 		{
-			// PR: We can switch between to compare
-			//ApplyForceToParticlesFromConstraint( m_constraints[ j ] );
-			SatisfyConstraint( m_constraints[j] );
+			ApplyForceToParticlesFromConstraint( m_constraints[ j ] );
 		}
 	}
 	
@@ -186,8 +195,6 @@ void Cloth::Update( float deltaSeconds )
 
 		particle.acceleration += forceOnParticle / particle.mass;
 
-		// PR: Old method which will not work because it directly modified current based on previous
-		//verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
 		verletIntegration( particle, deltaSeconds );
 
 	}

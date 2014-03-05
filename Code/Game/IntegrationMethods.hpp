@@ -7,37 +7,12 @@
 #include "Cloth.hpp"
 #include "../Engine/Math/FloatVector3.hpp"
 
-// Inline Integrator Function Dec
-void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth, 
-	Cloth::Particle & particleToIntegrate, 
-	float deltaSeconds );
-
-
 void verletIntegration( Cloth::Particle& p1, const Cloth::Particle& p2, float deltaSeconds );
 
 // PR: TODO:: Move this to generic math util class
 FloatVector3 calculateTriangleNormal( const Cloth::Particle& p1, const Cloth::Particle& p2, const Cloth::Particle& p3 );
 
 // ---------------------- IMPLEMENTATIONS -------------------- //
-inline void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth, 
-	Cloth::Particle & particleToIntegrate,
-	float deltaSeconds )
-{
-	float halfDeltaSeconds = deltaSeconds * 0.5f;
-	// Calculate Midpoint Velocity
-	FloatVector3 midpointVelocity = particleToIntegrate.currentVelocity + halfDeltaSeconds * particleToIntegrate.acceleration;
-
-	// Update Position Based On Midpoint Velocity
-	particleToIntegrate.currentPosition = particleToIntegrate.previousPosition + ( deltaSeconds * midpointVelocity );
-
-	particleToIntegrate.currentVelocity = midpointVelocity + halfDeltaSeconds * particleToIntegrate.acceleration;
-
-	// Swap Current With Previous
-	particleToIntegrate.previousPosition = particleToIntegrate.currentPosition;
-
-}
-
-
 inline FloatVector3 calculateTriangleNormal( const Cloth::Particle& p1, const Cloth::Particle& p2, const Cloth::Particle& p3 ) {
 
 	// PR:: For some reason there are particles with the same positions
