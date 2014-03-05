@@ -12,6 +12,9 @@ void verletLeapFrogIntegrationMassSpringDamper( const Cloth & cloth,
 	Cloth::Particle & particleToIntegrate, 
 	float deltaSeconds );
 
+
+void verletIntegration( Cloth::Particle& p1, const Cloth::Particle& p2, float deltaSeconds );
+
 // PR: TODO:: Move this to generic math util class
 FloatVector3 calculateTriangleNormal( const Cloth::Particle& p1, const Cloth::Particle& p2, const Cloth::Particle& p3 );
 
@@ -51,20 +54,21 @@ inline FloatVector3 calculateTriangleNormal( const Cloth::Particle& p1, const Cl
 
 }
 
-/*
-Vec3 calcTriangleNormal(Particle *p1,Particle *p2,Particle *p3)
-{
-Vec3 pos1 = p1->getPos();
-Vec3 pos2 = p2->getPos();
-Vec3 pos3 = p3->getPos();
 
-Vec3 v1 = pos2-pos1;
-Vec3 v2 = pos3-pos1;
 
-return v1.cross(v2);
+inline void verletIntegration( Cloth::Particle& p1, float deltaSeconds ) {
+
+	FloatVector3 tempPos = p1.currentPosition;
+	p1.currentPosition = p1.currentPosition + ( p1.currentPosition - p1.previousPosition ) + ( p1.acceleration * deltaSeconds );
+	p1.previousPosition = tempPos;
+
 }
 
+/*
+Vec3 temp = pos;
+pos = pos + (pos-old_pos)*(1.0-DAMPING) + acceleration*TIME_STEPSIZE2;
+old_pos = temp;
+acceleration = Vec3(0,0,0); // acceleration is reset since it HAS been translated into a change i
 */
-
 
 #endif

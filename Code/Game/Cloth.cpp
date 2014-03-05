@@ -181,11 +181,16 @@ void Cloth::Update( float deltaSeconds )
 
 	GenerateClothNormals();
 
-
-	for( unsigned int i = 0; i < m_constraints.size(); ++i )
-	{
-		ApplyForceToParticlesFromConstraint( m_constraints[ i ] );
+	// PR: Added loop to control how many times we want to satisfy the constraints
+	for ( int i = 0; i < m_numTimesToSatisfyContraints; ++i ) {
+		for( unsigned int j = 0; j < m_constraints.size(); ++j )
+		{
+			// PR: We can switch between to compare
+			//ApplyForceToParticlesFromConstraint( m_constraints[ j ] );
+			SatisfyConstraint( m_constraints[j] );
+		}
 	}
+	
 
 	AddWindForce( m_windForce );
 
@@ -206,8 +211,12 @@ void Cloth::Update( float deltaSeconds )
 
 		particle.acceleration += forceOnParticle / particle.mass;
 
-		verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
+		// PR: Old method which will not work because it directly modified current based on previous
+		//verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
+		verletIntegration( particle, deltaSeconds );
+
 	}
+
 }
 
 

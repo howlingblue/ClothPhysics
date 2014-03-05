@@ -7,6 +7,7 @@
 #include <vector>
 #include "../Engine/Math/FloatVector3.hpp"
 
+const size_t DEFAULT_CONSTRAINT_LOOPS = 8;
 
 //-----------------------------------------------------------------------------------------------
 class Cloth
@@ -68,6 +69,7 @@ public:
 		: m_dragCoefficient( dragCoefficient )
 		, m_particlesPerX( particlesPerX )
 		, m_particlesPerY( particlesPerY )
+		, m_numTimesToSatisfyContraints( DEFAULT_CONSTRAINT_LOOPS )
 	{
 		GenerateParticleGrid( particlesPerX, particlesPerY );
 	}
@@ -86,6 +88,8 @@ private:
 	float m_dragCoefficient;
 	unsigned int m_particlesPerX, m_particlesPerY;
 	FloatVector3 m_windForce;
+	// PR: Added this to dictate how many times we for loop
+	size_t		 m_numTimesToSatisfyContraints;
 
 	Particle &   GetParticleAtPosition( size_t rowNum, size_t colNum );
 	unsigned int GetIndexOfParticleEastOf( unsigned int particleIndex ) { return particleIndex + 1; }
@@ -115,6 +119,7 @@ private:
 //-----------------------------------------------------------------------------------------------
 inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 {
+	
 	Particle* particle1 = constraint.particle1;
 	Particle* particle2 = constraint.particle2;
 
@@ -124,6 +129,8 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 
 	FloatVector3 correctionVector = vectorFromParticle1To2 * ( 1.f - constraint.relaxedLength / currentDistanceBetweenParticles );
 	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
+	
+	//PR: OLD method with springs
 	FloatVector3 springForceVector = -constraint.stiffnessCoefficient * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
 
 	if( !particle1->positionIsLocked ) {
@@ -133,6 +140,8 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 	if( !particle2->positionIsLocked ) {
 		particle2->acceleration += springForceVector / particle2->mass;
 	}
+	
+	
 }
 
 
@@ -152,21 +161,24 @@ inline void Cloth::CalculateAndAddNormalsToParticles( Particle* particle1, Parti
 //-----------------------------------------------------------------------------------------------
 inline void Cloth::SatisfyConstraint(  Constraint& constraint )
 {
-	FloatVector3 vectorFromParticle1To2 = constraint.particle2->currentPosition - constraint.particle1->currentPosition;
+	Particle* particle1 = constraint.particle1;
+	Particle* particle2 = constraint.particle2;
+
+	FloatVector3 vectorFromParticle1To2 = particle2->currentPosition - particle1->currentPosition;
+	// PR: CalculateNorm is Length of vector?
 	float currentDistanceBetweenParticles = vectorFromParticle1To2.CalculateNorm();
 
 	FloatVector3 correctionVector = vectorFromParticle1To2 * ( 1.f - constraint.relaxedLength / currentDistanceBetweenParticles );
 	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
+	
+	if ( !particle1->positionIsLocked ) {
+		particle1->currentPosition += correctionVectorHalf;
+	}
 
-	if( constraint.particle2->positionIsLocked )
-		constraint.particle1->UpdatePositionIfUnlocked( correctionVector );
-	else
-		constraint.particle1->UpdatePositionIfUnlocked( correctionVectorHalf );
-
-	if( constraint.particle1->positionIsLocked )
-		constraint.particle2->UpdatePositionIfUnlocked( -correctionVector );
-	else
-		constraint.particle2->UpdatePositionIfUnlocked( -correctionVectorHalf );
+	if ( !particle2->positionIsLocked ) {
+		FloatVector3 negatedHalfCorrectionVector = correctionVectorHalf * -1.0f;
+		particle2->currentPosition += negatedHalfCorrectionVector;
+	}
 }
 
 
