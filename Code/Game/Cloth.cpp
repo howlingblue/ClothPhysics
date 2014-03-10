@@ -253,9 +253,9 @@ void Cloth::RenderDebugParticlesAndConstraints() const
 
 		if( constraint.stiffnessCoefficient == STRUCTURAL_STIFFNESS_COEFFICIENT )
 			constraintColor = GREEN;
-		if( constraint.stiffnessCoefficient == SHEAR_STIFFNESS_COEFFICIENT )
+		else if( constraint.stiffnessCoefficient == SHEAR_STIFFNESS_COEFFICIENT )
 			constraintColor = YELLOW;
-		if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
+		else if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
 			constraintColor = BLUE;
 
 		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::DRAW_ALWAYS );

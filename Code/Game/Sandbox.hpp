@@ -46,7 +46,7 @@ public:
 inline Sandbox::Sandbox( bool& quitVariable, unsigned int width, unsigned int height, float horizontalFOVDegrees )
 	: Game( quitVariable, width, height, horizontalFOVDegrees )
 	, m_camera( -2.f, 0.f, 0.f )
-	, m_cloth( 10, 10, 0.5f )
+	, m_cloth( 12, 12, 0.5f )
 	, m_lightPosition( 1.f, 1.f, 1.f )
 	, m_drawOrigin( false )
 	, m_totalRunTimeSeconds( 0.f )

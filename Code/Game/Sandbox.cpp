@@ -126,7 +126,12 @@ void Sandbox::RenderUI() const
 void Sandbox::GameUpdate( float deltaSeconds )
 {
 	if( m_drawOrigin )
-		Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::DRAW_ALWAYS );
+	{
+		//Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::DRAW_ALWAYS );
+		//Debug::DrawSphere( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Color( 1.f, 0.f, 0.f, 1.f ), Debug::DRAW_ALWAYS );
+		//Debug::DrawArrow( FloatVector3( 0.f, 0.f, 0.f ), Color( 1.f, 1.f, 1.f, 1.f ), FloatVector3( 5.f, 5.f, 5.f ), Color( 1.f, 0.f, 0.f, 1.f ), Debug::DRAW_ALWAYS );
+		Debug::DrawAABB( FloatVector3( 0.f, 0.f, 0.f ), FloatVector3( 5.f, 5.f, 5.f ), Color( 1.f, 1.f, 0.f, 1.f ), Color( 0.f, 1.f, 0.f, 1.f ), Debug::DRAW_ONLY_IF_VISIBLE );
+	}
 
 	m_cloth.Update( deltaSeconds, m_useConstraintSatisfaction );
 

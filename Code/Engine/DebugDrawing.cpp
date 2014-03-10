@@ -13,6 +13,12 @@ void Debug::ShapeManager::Initialize()
 	m_shapeRenderingMaterial.SetModelMatrixUniform( "u_modelMatrix" );
 	m_shapeRenderingMaterial.SetViewMatrixUniform( "u_viewMatrix" );
 	m_shapeRenderingMaterial.SetProjectionMatrixUniform( "u_projectionMatrix" );
+
+	m_vertexAttributeID = m_shapeRenderingMaterial.GetShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
+	renderer->BindVertexArraysToAttributeLocation( m_vertexAttributeID );
+
+	m_colorAttributeID = m_shapeRenderingMaterial.GetShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
+	renderer->BindVertexArraysToAttributeLocation( m_colorAttributeID );
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -37,6 +43,10 @@ void Debug::ShapeManager::Update( float deltaSeconds )
 	UpdateLifetimesInShapeDataArray( deltaSeconds, m_linesDrawnWhenVisible );
 	UpdateLifetimesInShapeDataArray( deltaSeconds, m_linesSkinnyOccluded );
 	UpdateLifetimesInShapeDataArray( deltaSeconds, m_linesAlwaysDrawn );
+
+	UpdateLifetimesInShapeDataArray( deltaSeconds, m_triStripsDrawnWhenVisible );
+	UpdateLifetimesInShapeDataArray( deltaSeconds, m_triStripsSkinnyOccluded );
+	UpdateLifetimesInShapeDataArray( deltaSeconds, m_triStripsAlwaysDrawn );
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -45,30 +55,36 @@ void Debug::ShapeManager::CleanupDeadShapes()
 	RemoveDeadShapesFromDataArray( m_linesDrawnWhenVisible );
 	RemoveDeadShapesFromDataArray( m_linesSkinnyOccluded );
 	RemoveDeadShapesFromDataArray( m_linesAlwaysDrawn );
+
+	RemoveDeadShapesFromDataArray( m_triStripsDrawnWhenVisible );
+	RemoveDeadShapesFromDataArray( m_triStripsSkinnyOccluded );
+	RemoveDeadShapesFromDataArray( m_triStripsAlwaysDrawn );
 }
 
 //-----------------------------------------------------------------------------------------------
 void Debug::ShapeManager::RenderShapesDrawnSkinnyWhenOccluded( const Renderer* renderer ) const
 {
-	if( m_linesSkinnyOccluded.size() == 0 )
-		return;
-
 	renderer->DisableFeature( Renderer::DEPTH_TESTING );
 	renderer->SetLineWidth( 2.f );
 
-	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int SIZE_OF_ARRAY_STRUCTURE = sizeof( ShapeVertexData );
-	int vertexAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
-	renderer->BindVertexArraysToAttributeLocation( vertexAttributeID );
-	renderer->SetPointerToGenericArray( vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].x );
-
+	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int NUMBER_OF_COLOR_COORDINATES = 4;
-	int colorAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
-	renderer->BindVertexArraysToAttributeLocation( colorAttributeID );
-	renderer->SetPointerToGenericArray( colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].red );
-
 	static const int VERTEX_ARRAY_START = 0;
-	renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesSkinnyOccluded.size() );
+
+	if( m_linesSkinnyOccluded.size() > 0 )
+	{
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].red );
+		renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesSkinnyOccluded.size() );
+	}
+
+	if( m_triStripsSkinnyOccluded.size() > 0 )
+	{
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsSkinnyOccluded[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsSkinnyOccluded[0].red );
+		renderer->RenderVertexArray( Renderer::TRIANGLE_STRIP, VERTEX_ARRAY_START, m_triStripsSkinnyOccluded.size() );
+	}
 
 	renderer->EnableFeature( Renderer::DEPTH_TESTING );
 }
@@ -78,63 +94,50 @@ void Debug::ShapeManager::RenderShapesDrawnOnlyWhenVisible( const Renderer* rend
 {
 	renderer->SetLineWidth( 5.f );
 
-	//Skinny Occluded shapes get drawn a second time, thicker, when they are actually visible.
-	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int SIZE_OF_ARRAY_STRUCTURE = sizeof( ShapeVertexData );
+	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int NUMBER_OF_COLOR_COORDINATES = 4;
 	static const int VERTEX_ARRAY_START = 0;
-	int vertexAttributeID, colorAttributeID;
 
-	if( m_linesSkinnyOccluded.size() > 0 )
+	if( m_linesDrawnWhenVisible.size() > 0 )
 	{
-		vertexAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
-		renderer->BindVertexArraysToAttributeLocation( vertexAttributeID );
-		renderer->SetPointerToGenericArray( vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].x );
-
-		colorAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
-		renderer->BindVertexArraysToAttributeLocation( colorAttributeID );
-		renderer->SetPointerToGenericArray( colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesSkinnyOccluded[0].red );
-
-		renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesSkinnyOccluded.size() );
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesDrawnWhenVisible[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesDrawnWhenVisible[0].red );
+		renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesDrawnWhenVisible.size() );
 	}
 
-	//Then draw all regularly visible shapes
-	if( m_linesDrawnWhenVisible.size() == 0 )
-		return;
-
-	vertexAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
-	renderer->BindVertexArraysToAttributeLocation( vertexAttributeID );
-	renderer->SetPointerToGenericArray( vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesDrawnWhenVisible[0].x );
-
-	colorAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
-	renderer->BindVertexArraysToAttributeLocation( colorAttributeID );
-	renderer->SetPointerToGenericArray( colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesDrawnWhenVisible[0].red );
-
-	renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesDrawnWhenVisible.size() );
+	if( m_triStripsDrawnWhenVisible.size() > 0 )
+	{
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsDrawnWhenVisible[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsDrawnWhenVisible[0].red );
+		renderer->RenderVertexArray( Renderer::TRIANGLE_STRIP, VERTEX_ARRAY_START, m_triStripsDrawnWhenVisible.size() );
+	}
 }
 
 //-----------------------------------------------------------------------------------------------
 void Debug::ShapeManager::RenderShapesDrawnAlways( const Renderer* renderer ) const
 {
-	if( m_linesAlwaysDrawn.size() == 0 )
-		return;
-
 	renderer->DisableFeature( Renderer::DEPTH_TESTING );
 	renderer->SetLineWidth( 5.f );
 
-	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int SIZE_OF_ARRAY_STRUCTURE = sizeof( ShapeVertexData );
-	int vertexAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
-	renderer->BindVertexArraysToAttributeLocation( vertexAttributeID );
-	renderer->SetPointerToGenericArray( vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesAlwaysDrawn[0].x );
-
+	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
 	static const int NUMBER_OF_COLOR_COORDINATES = 4;
-	int colorAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
-	renderer->BindVertexArraysToAttributeLocation( colorAttributeID );
-	renderer->SetPointerToGenericArray( colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesAlwaysDrawn[0].red );
-
 	static const int VERTEX_ARRAY_START = 0;
-	renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesAlwaysDrawn.size() );
+
+	if( m_linesAlwaysDrawn.size() > 0 )
+	{
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesAlwaysDrawn[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_linesAlwaysDrawn[0].red );
+		renderer->RenderVertexArray( Renderer::LINES, VERTEX_ARRAY_START, m_linesAlwaysDrawn.size() );
+	}
+
+	if( m_triStripsAlwaysDrawn.size() > 0 )
+	{
+		renderer->SetPointerToGenericArray( m_vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsAlwaysDrawn[0].x );
+		renderer->SetPointerToGenericArray( m_colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_triStripsAlwaysDrawn[0].red );
+		renderer->RenderVertexArray( Renderer::TRIANGLE_STRIP, VERTEX_ARRAY_START, m_triStripsAlwaysDrawn.size() );
+	}
 
 	renderer->EnableFeature( Renderer::DEPTH_TESTING );
 }
@@ -162,100 +165,6 @@ void Debug::ShapeManager::UpdateLifetimesInShapeDataArray( float deltaSeconds, s
 	}
 }
 
-//-----------------------------------------------------------------------------------------------
-std::vector< Debug::Drawing > Debug::g_activeDebugDrawings;
-Material Debug::g_debugDrawingMaterial;
-
-// void Debug::InitializeDrawingSystem()
-// {
-// 	g_debugDrawingMaterial.SetShaderProgram( ShaderProgram::CreateOrGetShaderProgram( "Data/Shaders/BasicNoTexture.vertex.330.glsl", "Data/Shaders/BasicNoTexture.fragment.330.glsl" ) );
-// 	g_debugDrawingMaterial.SetModelMatrixUniform( "u_modelMatrix" );
-// 	g_debugDrawingMaterial.SetViewMatrixUniform( "u_viewMatrix" );
-// 	g_debugDrawingMaterial.SetProjectionMatrixUniform( "u_projectionMatrix" );
-// }
-// 
-// void Debug::RenderDrawings()
-// {
-// 	Renderer* renderer = Renderer::GetRenderer();
-// 
-// 	g_debugDrawingMaterial.Apply( renderer );
-// 
-// 	for( unsigned int i = 0; i < Debug::g_activeDebugDrawings.size(); ++i )
-// 	{
-// 
-// 		switch( g_activeDebugDrawings[ i ].GetVisibility() )
-// 		{
-// 		case Drawing::DRAW_ALWAYS:
-// 			renderer->DisableFeature( Renderer::DEPTH_TESTING );
-// 
-// 			renderer->SetLineWidth( 5.f );
-// 			Debug::g_activeDebugDrawings[ i ].Render( 1.f );
-// 
-// 			renderer->EnableFeature( Renderer::DEPTH_TESTING );
-// 			break;
-// 
-// 
-// 		case Debug::Drawing::DRAW_SKINNY_IF_OCCLUDED:
-// 			renderer->DisableFeature( Renderer::DEPTH_TESTING );
-// 
-// 			renderer->SetLineWidth( 2.f );
-// 			Debug::g_activeDebugDrawings[ i ].Render( 0.3f );
-// 
-// 			renderer->EnableFeature( Renderer::DEPTH_TESTING );
-// 
-// 
-// 		case Debug::Drawing::DRAW_ONLY_IF_VISIBLE:
-// 		default:
-// 			renderer->SetLineWidth( 5.f );
-// 			Debug::g_activeDebugDrawings[ i ].Render( 1.f );
-// 		}
-// 
-// 
-// 		if( Debug::g_activeDebugDrawings[ i ].GetLifetimeRemaining() <= 0.f )
-// 		{
-// 			Debug::g_activeDebugDrawings.erase( Debug::g_activeDebugDrawings.begin() + i );
-// 			--i;
-// 			continue;
-// 		}
-// 	}
-// 
-// 	g_debugDrawingMaterial.Remove( renderer );
-// }
-// 
-// void Debug::UpdateDrawings( float deltaSeconds )
-// {
-// 	for( unsigned int i = 0; i < g_activeDebugDrawings.size(); ++i )
-// 	{
-// 		g_activeDebugDrawings[ i ].Update( deltaSeconds );
-// 	}
-// }
-
-
-//-----------------------------------------------------------------------------------------------
-void Debug::Drawing::Render( float opacity ) const
-{
-	Renderer* renderer = Renderer::GetRenderer();
-
-	static const int NUMBER_OF_VERTEX_COORDINATES = 3;
-	//static const int SIZE_OF_ARRAY_STRUCTURE = sizeof( DrawingVertexData );
-	int vertexAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexWorldPosition" );
-	renderer->BindVertexArraysToAttributeLocation( vertexAttributeID );
-	//renderer->SetPointerToGenericArray( vertexAttributeID, NUMBER_OF_VERTEX_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_drawingVertices[0] );
-
-
-	if( opacity < 1.f )
-		;//renderer->SetColor( m_drawingVertices[ 0 ].red, m_drawingVertices[ 0 ].green, m_drawingVertices[ 0 ].blue, std::min( opacity, m_drawingVertices[ 0 ].alpha ) );
-	else
-	{
-		static const int NUMBER_OF_COLOR_COORDINATES = 4;
-		int colorAttributeID = renderer->GetActiveShaderProgram()->GetAttributeIDFromName( "i_vertexColor" );
-		renderer->BindVertexArraysToAttributeLocation( colorAttributeID );
-		//renderer->SetPointerToGenericArray( colorAttributeID, NUMBER_OF_COLOR_COORDINATES, Renderer::FLOAT_TYPE, false, SIZE_OF_ARRAY_STRUCTURE, &m_drawingVertices[0].red );
-	}
-
-	static const int VERTEX_ARRAY_START = 0;
-	renderer->RenderVertexArray( m_shape, VERTEX_ARRAY_START, m_numberOfVertices );
-}
 
 void GenerateUnitIcosahedronAboutOrigin( std::vector< FloatVector3 >& out_triangleArray )
 {
@@ -414,16 +323,32 @@ void GenerateUnitIcosahedralSphereAboutOrigin( std::vector< FloatVector3 >& out_
 }
 
 //-----------------------------------------------------------------------------------------------
-void Debug::DrawSphereForTime( const FloatVector3&, float, const Color&, Debug::Drawing::Visibility, float )
+void Debug::DrawSphereForTime( const FloatVector3& center, float radius, const Color& color, DrawingVisibility visibility, float lifetimeSeconds )
 {
-// 	std::vector< FloatVector3 > icosahedralSpherePoints;
-// 	GenerateUnitIcosahedralSphereAboutOrigin( icosahedralSpherePoints, 2 );
-// 
-// 	Debug::DrawingVertexData* finalTriangleArray = new Debug::DrawingVertexData[ icosahedralSpherePoints.size() ];
-// 	for( unsigned int i = 0; i < icosahedralSpherePoints.size(); ++i )
-// 	{
-// 		finalTriangleArray[ i ] = DrawingVertexData( icosahedralSpherePoints[ i ] * radius + center, color );
-// 	}
-// 
-// 	g_activeDebugDrawings.push_back( Debug::Drawing( timeSeconds, icosahedralSpherePoints.size(), finalTriangleArray, Renderer::TRIANGLES, visibility ) );
+	std::vector< ShapeVertexData >* arrayToAddPoint = nullptr;
+
+	switch( visibility )
+	{
+	case DRAW_ALWAYS:
+		arrayToAddPoint = &g_shapeManager.m_triStripsAlwaysDrawn;
+		break;
+	case DRAW_ONLY_IF_VISIBLE:
+		arrayToAddPoint = &g_shapeManager.m_triStripsDrawnWhenVisible;
+		break;
+	case DRAW_SKINNY_IF_OCCLUDED:
+		arrayToAddPoint = &g_shapeManager.m_triStripsSkinnyOccluded;
+		//Add a second set of vertices that will be drawn larger when visible
+		DrawSphereForTime( center, radius, Color( color.r, color.g, color.b, 0.5 * color.a ), DRAW_ONLY_IF_VISIBLE, lifetimeSeconds );
+		break;
+	default:
+		assert( false );
+	}
+
+ 	std::vector< FloatVector3 > icosahedralSpherePoints;
+ 	GenerateUnitIcosahedralSphereAboutOrigin( icosahedralSpherePoints, 2 );
+ 
+ 	for( unsigned int i = 0; i < icosahedralSpherePoints.size(); ++i )
+ 	{
+		arrayToAddPoint->push_back( ShapeVertexData( lifetimeSeconds, icosahedralSpherePoints[ i ] * radius + center, color ) );
+ 	}
 }
