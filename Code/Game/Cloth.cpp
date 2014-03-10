@@ -243,7 +243,7 @@ void Cloth::RenderDebugParticlesAndConstraints() const
 	{
 		const Particle& particle = *m_particles[ i ];
 
-		Debug::DrawPoint( particle.currentPosition, 0.5f, WHITE, Debug::Drawing::DRAW_ALWAYS );
+		Debug::DrawPoint( particle.currentPosition, 0.5f, WHITE, Debug::DRAW_ALWAYS );
 	}
 
 	Color constraintColor = WHITE;
@@ -258,7 +258,7 @@ void Cloth::RenderDebugParticlesAndConstraints() const
 		if( constraint.stiffnessCoefficient == BENDING_STIFFNESS_COEFFICIENT )
 			constraintColor = BLUE;
 
-		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::Drawing::DRAW_ALWAYS );
+		Debug::DrawLine( constraint.particle1->currentPosition, constraintColor, constraint.particle2->currentPosition, constraintColor, Debug::DRAW_ALWAYS );
 	}
 }
 

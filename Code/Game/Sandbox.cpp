@@ -114,7 +114,7 @@ void Sandbox::RenderGame() const
 
 	m_cloth.Render( m_drawDebugCloth );
 
-	Debug::DrawPoint( m_lightPosition, 1.f, Color( 1.f, 1.f, 1.f, 1.f ), Debug::Drawing::DRAW_ONLY_IF_VISIBLE );
+	Debug::DrawPoint( m_lightPosition, 1.f, Color( 1.f, 1.f, 1.f, 1.f ), Debug::DRAW_ONLY_IF_VISIBLE );
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ void Sandbox::RenderUI() const
 void Sandbox::GameUpdate( float deltaSeconds )
 {
 	if( m_drawOrigin )
-		Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::Drawing::DRAW_ALWAYS );
+		Debug::DrawAxes( FloatVector3( 0.f, 0.f, 0.f ), 1.f, Debug::DRAW_ALWAYS );
 
 	m_cloth.Update( deltaSeconds, m_useConstraintSatisfaction );
 
