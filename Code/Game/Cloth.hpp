@@ -51,15 +51,13 @@ public:
 		Particle* particle1;
 		Particle* particle2;
 		float relaxedLength;
-		float stiffnessCoefficient;
 
-		Constraint( Particle& particleA, Particle& particleB, float constraintStiffness )
+		Constraint( Particle& particleA, Particle& particleB )
 		{
 			particle1 = &particleA;
 			particle2 = &particleB;
 			FloatVector3 vectorBetweenConstraintEnds = particle1->currentPosition - particle2->currentPosition;
 			relaxedLength = vectorBetweenConstraintEnds.CalculateNorm();
-			stiffnessCoefficient = constraintStiffness;
 		}
 	};
 	#pragma endregion
@@ -85,7 +83,9 @@ public:
 private:
 
 	std::vector< Particle* > m_particles;
-	std::vector< Constraint > m_constraints;
+	std::vector< Constraint > m_bendingConstraints;
+	std::vector< Constraint > m_shearConstraints;
+	std::vector< Constraint > m_structuralConstraints;
 	float m_dragCoefficient;
 	unsigned int m_particlesPerX, m_particlesPerY;
 	FloatVector3 m_windForce;
@@ -103,7 +103,7 @@ private:
 	void ClearParticleAccelerations();
 	void ClearParticleNormals();
 
-	void ApplyForceToParticlesFromConstraint( Constraint& constraint );
+	void ApplyForceToParticlesFromConstraint( Constraint& constraint, float stiffnessCoefficient );
 	void CalculateAndAddNormalsToParticles( Particle* particle1, Particle* particle2, Particle* particle3 );
 	void GenerateClothNormals();
 	void GenerateParticleGrid( unsigned int particlesPerX, unsigned int particlesPerY );
@@ -118,7 +118,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------------------------
-inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
+inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint, float stiffnessCoefficient )
 {
 	
 	Particle* particle1 = constraint.particle1;
@@ -132,7 +132,7 @@ inline void Cloth::ApplyForceToParticlesFromConstraint( Constraint& constraint )
 	FloatVector3 correctionVectorHalf = 0.5f * correctionVector;
 	
 	//PR: OLD method with springs
-	FloatVector3 springForceVector = -constraint.stiffnessCoefficient * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
+	FloatVector3 springForceVector = -stiffnessCoefficient * ( currentDistanceBetweenParticles - constraint.relaxedLength ) * ( vectorFromParticle1To2 / currentDistanceBetweenParticles );
 
 	if( !particle1->positionIsLocked ) {
 		particle1->acceleration -= springForceVector / particle1->mass;
@@ -160,7 +160,7 @@ inline void Cloth::CalculateAndAddNormalsToParticles( Particle* particle1, Parti
 }
 
 //-----------------------------------------------------------------------------------------------
-inline void Cloth::SatisfyConstraint(  Constraint& constraint )
+inline void Cloth::SatisfyConstraint( Constraint& constraint )
 {
 	Particle* particle1 = constraint.particle1;
 	Particle* particle2 = constraint.particle2;
@@ -184,7 +184,8 @@ inline void Cloth::SatisfyConstraint(  Constraint& constraint )
 
 
 // PR : For Row major convenience
-inline Cloth::Particle& Cloth::GetParticleAtPosition( size_t colNum, size_t rowNum ) {
+inline Cloth::Particle& Cloth::GetParticleAtPosition( size_t colNum, size_t rowNum ) 
+{
 	size_t offset = ( rowNum * m_particlesPerX ) + colNum; 
 	Particle & particle = *(m_particles[offset]);
 	return particle;
