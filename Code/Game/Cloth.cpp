@@ -210,7 +210,10 @@ void Cloth::Update( float deltaSeconds, bool useConstraintSatisfaction )
 
 		particle.acceleration += forceOnParticle / particle.mass;
 
-		verletIntegration( particle, deltaSeconds );
+		if ( useConstraintSatisfaction )
+			verletIntegration( particle, deltaSeconds );
+		else
+			verletLeapFrogIntegrationMassSpringDamper( *this, particle, deltaSeconds );
 
 	}
 
